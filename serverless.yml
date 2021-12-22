@@ -1,0 +1,66 @@
+service: sqs-consumers
+
+
+frameworkVersion: '2'
+
+useDotenv: true
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**
+    - package*
+    - README.md
+    - requirements.txt
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: ${self:custom.profiles.${opt:stage, self:provider.stage, 'dev'}}
+  region: ${opt:region, self:custom.defaultRegion}
+  stackName: sqs-consumers-stack
+  memorySize: 1024
+  timeout: 10
+  deploymentBucket:
+    skipPolicySetup: true
+  versionFunctions: false
+
+custom:
+  defaultRegion: us-east-2
+  defaultStage: dev
+  defaultProfile: default
+  profiles:
+    dev: ${env:AWS_PROFILE, self:custom.defaultProfile}
+    test: ${env:AWS_PROFILE, self:custom.defaultProfile}
+    prod: ${env:AWS_PROFILE, self:custom.defaultProfile}
+    qa: ${env:AWS_PROFILE, self:custom.defaultProfile}
+  pythonRequirements:
+    dockerizePip: non-linux
+
+
+functions:
+  sqsLogUserConsumer:
+    handler: handler.run
+    name: sqs-LogAppUserConsumer
+    description: Consumo da fila de verificação de usuários pelos apps
+    # events:
+    #   - sqs:
+    #       arn:
+    #         Fn::GetAtt:
+    #           - receiverQueue
+    #           - Arn
+    events:
+      - sqs: arn
+
+resources:
+  Resources:
+    receiverQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: receiverQueue

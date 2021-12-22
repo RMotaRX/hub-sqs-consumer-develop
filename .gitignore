@@ -1,0 +1,10 @@
+# Distribution / packaging
+.Python
+*.pyc
+env/
+venv/
+
+# Serverless directories
+.serverless
+node_modules
+
